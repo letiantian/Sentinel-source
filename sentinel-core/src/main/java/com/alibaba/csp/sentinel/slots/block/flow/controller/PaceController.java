@@ -54,13 +54,16 @@ public class PaceController implements Controller {
         } else {
             // 计算自己需要的等待时间
             long waitTime = costTime + latestPassedTime.get() - TimeUtil.currentTimeMillis();
+            // 如果是单线程，latestPassedTime 肯定是当前时间或者之前的时间。所以 waitTime < constTime ，
+            // maxQueueingTimeMs要小于constTime才会走到if分支中，但是意义在哪里？
+            // 这就要考虑多线程的情况了
             if (waitTime >= maxQueueingTimeMs) {
                 return false;
             } else {
-                long oldTime = latestPassedTime.addAndGet(costTime);
+                long oldTime = latestPassedTime.addAndGet(costTime); // 想象下，多线程的情况下，这里并发执行。latestPassedTime是atomicLong，会变得很大。
                 try {
                     waitTime = oldTime - TimeUtil.currentTimeMillis();
-                    if (waitTime >= maxQueueingTimeMs) {
+                    if (waitTime >= maxQueueingTimeMs) {     // 多线程的情况下，很可能触发这种。
                         latestPassedTime.addAndGet(-costTime);
                         return false;
                     }

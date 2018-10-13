@@ -172,6 +172,9 @@ public class CtSph implements Sph {
         protected Entry trueExit(int count, Object... args) throws ErrorEntryFreeException {
             if (context != null) {
                 if (context.getCurEntry() != this) {
+                    /**
+                     * 若获取资源顺序是 entry1 -> entry2 -> entry3，那么要保证退出顺序是 entry3 -> entry2 -> entry1
+                     */
                     // Clean previous call stack.
                     CtEntry e = (CtEntry)context.getCurEntry();
                     while (e != null) {
